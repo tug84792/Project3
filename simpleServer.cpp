@@ -104,6 +104,20 @@ void initDictionary(void){
     dictFP.close();
 }
 
+void * logThread(void * arg){
+    cout << "The Logging Thread has begun. log.txt will now be created and updated!" << endl;
+    int index = 0, elementBound = 100;;
+    while(true){
+        //start logging only when queue has at least 100 elements
+        while(loggerVector.size() < elementBound){
+            index++;
+            usleep(10);
+            if(index > 10){
+                elementBound = 1;
+            }
+        }
+
+
 
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
 //of code that basically establish locks and create threads.
