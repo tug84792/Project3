@@ -190,6 +190,12 @@ int main(int argc, char** argv) {
             return -1;
         }
 
+        pthread_t innerNewThread;
+        int * arg = (int *)malloc(sizeof arg);
+        *arg = clientSocket;
+        //Create a new thread for each connection
+        pthread_create(&innerNewThread, nullptr, &workerThread, arg);
+
         printf("Connection success!\n");
         char* clientMessage = "Hello! I hope you can see this.\n";
         char* msgRequest = "Send me some text and I'll respond with something interesting!\nSend the escape key to close the connection.\n";
