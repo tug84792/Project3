@@ -76,7 +76,18 @@ void* workerThread(void * argument) {
             write(cliSock, correct, strlen(correct));
         }
     }
-
+    pthread_mutex_lock(&lockForSocket);
+    auto indexLocation = cSockVector.end();
+    for(auto iterator = cSockVector.begin(); iterator != cSockVector.end(); iterator++){
+        if(cliSock == *iterator){
+            indexLocation = iterator;
+            break;
+        }
+    }
+    cSockVector.erase(indexLocation);
+    pthread_mutex_unlock(&lockForSocket);
+    close(cliSock);
+    pthread_exit(nullptr);
 }
 
 
