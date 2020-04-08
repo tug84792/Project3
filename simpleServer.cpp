@@ -29,6 +29,15 @@ map <string, int> inputWord;
 
 pthread_mutex_t lockForSocket, lockForLogFile;
 
+// This function basically makes up the sentence/indivisual line that will be printed
+// to the log file.
+string logLine(string inputWord, string outcome){
+    string localString = "";
+    localString += "CLIENT: " + inputWord + " is " + outcome;
+    return localString;
+}
+
+
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
 //of code that basically establish locks and create threads.
 int main(int argc, char** argv) {
