@@ -54,8 +54,31 @@ void* workerThread(void * argument) {
         bytesReturned = recv(cliSock, recvBuffer, BUF_LEN, 0);
         if (bytesReturned <= 0)
             break;
+        recvBuffer[bytesReturned] = 0;
+        if(recvBuffer[bytesReturned-1] == '\n' || recvBuffer[bytesReturned-1] == char(13))
+            recvBuffer[bytesReturned-1] = '\0';
+        if(recvBuffer[bytesReturned-2] == '\n' || recvBuffer[bytesReturned-2] == char(13))
+            recvBuffer[bytesReturned-2] = '\0';
+
+        string localString = string(recvBuffer);
+
+        if(inputWord.find(localString) == inputWord.end()){
+            string loggerString = logLine(localString, string(incorrect));
+            pthread_mutex_lock(&lockForLogFile);
+            loggerVector.push_back(loggerString);
+            pthread_mutex_unlock(&lockForLogFile);
+            write(cliSock, incorrect, strlen(incorrect));
+        } else {
+            string loggerString = logLine(localString, string(correct));
+            pthread_mutex_lock(&lockForLogFile);
+            loggerVector.push_back(loggerString);
+            pthread_mutex_unlock(&lockForLogFile);
+            write(cliSock, correct, strlen(correct));
+        }
     }
+
 }
+
 
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
 //of code that basically establish locks and create threads.
