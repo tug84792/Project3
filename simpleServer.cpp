@@ -19,7 +19,7 @@ using namespace std;
 vector<int> cSockVector;
 vector<string> loggerVector;
 
-#define DEFAULT_PORT 5000
+#define DEFAULT_PORT 8888
 #define NUM_WORKERS 1
 
 string logText  = "log.txt";
@@ -143,23 +143,25 @@ int main(int argc, char** argv) {
 //Here I start the mutex locks for the sockets and the log file.
     pthread_mutex_init(&lockForSocket, nullptr);
     pthread_mutex_init(&lockForLogFile, nullptr);
+
     pthread_t newThread;
     pthread_create(&newThread, nullptr, &logThread, nullptr);
 
-    if(argc == 1){
-        printf("No port number entered.\n");
-        return -1;
+    int connectionPort = 0;
+
+    if (argc == 1){
+        connectionPort = DEFAULT_PORT;
+        printf("No port number entered.\nDefault port is: %d \n", connectionPort);
+    } else {
+        connectionPort = atoi(argv[1]);
     }
     //sockaddr_in holds information about the user connection.
     //We don't need it, but it needs to be passed into accept().
     struct sockaddr_in client;
     int clientLen = sizeof(client);
-    int connectionPort = atoi(argv[1]);
     int connectionSocket, clientSocket, bytesReturned;
     char recvBuffer[BUF_LEN];
     recvBuffer[0] = '\0';
-
-    connectionPort = atoi(argv[1]);
 
     //We can't use ports below 1024 and ports above 65535 don't exist.
     if(connectionPort < 1024 || connectionPort > 65535){
