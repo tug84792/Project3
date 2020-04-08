@@ -1,5 +1,19 @@
 #include "simpleServer.h"
+#include<map>
+#include<fstream>
+#include<iostream>
+#include<vector>
+#include<string>
+#include<fstream>
+#include <arpa/inet.h>
 
+//For some reason, and I have noe idea why, but i had to declare everything here. It would not take
+//a header file as being common.
+
+using namespace std;
+map<string, int> inputWord;
+vector<int> cSockVector;
+pthread_mutex_t lockForSocket;
 //Here I create a client thread, which is fairly similar to the workerThread over in simpleServer.cpp
 void* clientThread(void * argument){
 
@@ -85,6 +99,26 @@ void* clientThread(void * argument){
     //Close out the client and end the thread
     close(socket_desc);
     pthread_exit(nullptr);
+}
+string dictionary = "words.txt";
+
+//This function is quite simple. It loads the dictionary text file into the program.
+//It is then placed into a data structure for further comparison. It will be used for both simpleServer
+//and simpleClient.
+void initDictionary(void){
+    //Bring in file pointer and read it in
+    fstream dictFP;
+    string localString;
+    dictFP.open(dictionary, ios::in);
+
+    //Grab each word line by line and stored in localString
+    if(dictFP.is_open()){
+        while(getline(dictFP, localString)){
+            inputWord[localString] = 1;
+        }
+    }
+    //Close up the dictionary file
+    dictFP.close();
 }
 
 //main function that initializes the 10 threads for testing
