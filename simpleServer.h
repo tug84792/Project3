@@ -6,10 +6,11 @@
 #define PROJECT3_SIMPLESERVER_H
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
+#include <cstring>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <unistd.h>
+#include <cstdlib>
 #define BUF_LEN 512
 int open_listenfd(int);
 

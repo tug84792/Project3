@@ -1,5 +1,4 @@
 #include "simpleServer.h"
-
 //An extremely simple server that connects to a given port.
 //Once the server is connected to the port, it will listen on that port
 //for a user connection.
@@ -9,8 +8,30 @@
 //The server will then use the socket descriptor to communicate with the user, sending and
 //receiving messages.
 
-int main(int argc, char** argv)
-{
+#include<string>
+#include<fstream>
+#include<iostream>
+#include<vector>
+#include<map>
+
+using namespace std;
+
+vector<int> cSockVector;
+vector<string> loggerVector;
+
+#define DEFAULT_PORT 5000
+#define NUM_WORKERS 1
+
+string logText  = "log.txt";
+string dictionary = "dictionary.txt";
+
+map <string, int> inputWord;
+
+pthread_mutex_t lockForSocket, lockForLogFile;
+
+//In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
+//of code that basically establish locks and create threads.
+int main(int argc, char** argv) {
 
     if(argc == 1){
         printf("No port number entered.\n");
@@ -48,9 +69,10 @@ int main(int argc, char** argv)
     //The second that was just created that will be used to communicate with
     //the connected user.
     printf("Enter ctrl + c to end the program\n");
-    while(1){
+    while(true){
 
-        if((clientSocket = accept(connectionSocket, (struct sockaddr*)&client, &clientLen)) == -1){
+        if((clientSocket = accept(connectionSocket, (struct sockaddr*)&client,
+                                  reinterpret_cast<socklen_t *>(&clientLen))) == -1){
             printf("Error connecting to client.\n");
             return -1;
         }
@@ -97,5 +119,4 @@ int main(int argc, char** argv)
             }
         }
     }
-    return 0;
 }
