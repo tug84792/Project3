@@ -8,26 +8,14 @@
 //The server will then use the socket descriptor to communicate with the user, sending and
 //receiving messages.
 
-#include<string>
-#include<fstream>
-#include<iostream>
-#include<vector>
-#include<map>
-
-using namespace std;
-
-vector<int> cSockVector;
 vector<string> loggerVector;
 
 #define DEFAULT_PORT 8888
 #define NUM_WORKERS 1
 
-string logText  = "log.txt";
 string dictionary = "dictionary.txt";
 
-map <string, int> inputWord;
-
-pthread_mutex_t lockForSocket, lockForLogFile;
+pthread_mutex_t lockForLogFile;
 
 // This function basically makes up the sentence/indivisual line that will be printed
 // to the log file.
@@ -214,7 +202,7 @@ int main(int argc, char** argv) {
 
 
         //Begin sending and receiving messages.
-        while(1){
+        while(true){
             send(clientSocket, msgPrompt, strlen(msgPrompt), 0);
             //recv() will store the message from the user in the buffer, returning
             //how many bytes we received.
@@ -240,4 +228,7 @@ int main(int argc, char** argv) {
             }
         }
     }
+    pthread_mutex_destroy(&lockForSocket);
+    pthread_mutex_destroy(&lockForLogFile);
+    return 0;
 }

@@ -1,6 +1,4 @@
-//
-// Created by Harith Siddiqui on 4/8/20.
-//
+using namespace std;
 
 #ifndef PROJECT3_SIMPLESERVER_H
 #define PROJECT3_SIMPLESERVER_H
@@ -12,6 +10,20 @@
 #include <unistd.h>
 #include <cstdlib>
 #define BUF_LEN 512
+
+#include<string>
+#include<fstream>
+#include<iostream>
+#include<vector>
+#include<map>
+#include <arpa/inet.h>
+#include<map>
+
 int open_listenfd(int);
+
+string logText  = "log.txt";
+map <string, int> inputWord;
+vector<int> cSockVector;
+pthread_mutex_t lockForSocket;
 
 #endif //PROJECT3_SIMPLESERVER_H
