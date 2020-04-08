@@ -41,5 +41,49 @@ void* clientThread(void * argument){
     map<string, int>::iterator looper;
     char boundedBuffer[BUF_LEN];
 
+    //This for loop has same logic as in the worker thread. Keeps going until it has reached the end.
+    for(looper = inputWord.begin(); looper != inputWord.end(); looper++){
 
+        message = (*looper).first;
+        //keep adding new line
+        message += "\n";
+
+        //Again use built-in funcitons/provided code
+        sentValue = send(socket_desc, message.c_str(), message.length(), 0);
+        //Error checking
+        if (sentValue < 0){
+            puts("SEND FAILED");
+            return reinterpret_cast<void *>(1);
+        }
+        puts("DATA SENT");
+
+        receivedValue = recv(socket_desc, boundedBuffer, BUF_LEN, 0);
+        if (receivedValue < 0){
+            puts("RECV FAILED");
+            return reinterpret_cast<void *>(1);
+        }
+        puts("REPLY RECEIVED\n");
+        puts(boundedBuffer);
     }
+
+    //Here I will iterate through the whole queue of sockets, protecting this data structure using a mutex
+    pthread_mutex_lock(&lockForSocket);
+    //Iterator named positionC, C for this being the client file
+    auto positionC = cSockVector.end();
+    //looperH for this file's looper specifically
+    for(auto looperH = cSockVector.begin(); looperH != cSockVector.end(); looperH++){
+        //If at the end
+        if(socket_desc == *looperH){
+            positionC = looperH;
+            break;
+        }
+    }
+    //Get rid of last element, and release the lock.
+    cSockVector.erase(positionC);
+    pthread_mutex_unlock(&lockForSocket);
+
+    //Close out the client and end the thread
+    close(socket_desc);
+    pthread_exit(nullptr);
+}
+
