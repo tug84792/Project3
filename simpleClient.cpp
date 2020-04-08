@@ -87,3 +87,25 @@ void* clientThread(void * argument){
     pthread_exit(nullptr);
 }
 
+//main function that initializes the 10 threads for testing
+int main() {
+
+    //Initialize the dictionary and client threads
+    initDictionary();
+    pthread_t client;
+    //Begin locking
+    pthread_mutex_init(&lockForSocket, nullptr);
+
+    //for loop that actually created the 10 threads
+    for(int i = 0; i < 10; i++){
+        pthread_create(&client, nullptr, &clientThread, nullptr);
+    }
+
+    usleep(10);
+    //Here, I use a while loop to wait for the client thread to complete its requests
+    //I also error check to make sure that there are actually clients
+    while (!cSockVector.empty()) {
+        usleep(100);
+    }
+    return 0;
+}
