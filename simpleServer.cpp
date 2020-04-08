@@ -90,6 +90,20 @@ void* workerThread(void * argument) {
     pthread_exit(nullptr);
 }
 
+//This function is quite simple. It loads the dictionary text file into the program.
+//It is then placed into a data structure for further comparison
+void initDictionary(void){
+    fstream dictFP;
+    string localString;
+    dictFP.open(dictionary, ios::in);
+    if(dictFP.is_open()){
+        while(getline(dictFP, localString)){
+            inputWord[localString] = 1;
+        }
+    }
+    dictFP.close();
+}
+
 
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
 //of code that basically establish locks and create threads.
