@@ -37,6 +37,25 @@ string logLine(string inputWord, string outcome){
     return localString;
 }
 
+// This worker thread function works in the same logic as presented during labs
+void* workerThread(void * argument) {
+    int cliSock = *((int *) argument), bytesReturned;;
+
+    char *correct = "OK\n";
+    char *incorrect = "MISSPELLED\n";
+    char recvBuffer[BUF_LEN];
+    recvBuffer[0] = '\0';
+
+    pthread_mutex_lock(&lockForSocket);
+    cSockVector.push_back(cliSock);
+    pthread_mutex_unlock(&lockForSocket);
+
+    while (true) {
+        bytesReturned = recv(cliSock, recvBuffer, BUF_LEN, 0);
+        if (bytesReturned <= 0)
+            break;
+    }
+}
 
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
 //of code that basically establish locks and create threads.
