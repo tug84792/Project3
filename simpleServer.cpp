@@ -137,6 +137,15 @@ void * logThread(void * arg){
 //of code that basically establish locks and create threads.
 int main(int argc, char** argv) {
 
+    initDictionary();
+
+//Initialize the mutex to be used for logging and client socket.
+//Here I start the mutex locks for the sockets and the log file.
+    pthread_mutex_init(&lockForSocket, nullptr);
+    pthread_mutex_init(&lockForLogFile, nullptr);
+    pthread_t newThread;
+    pthread_create(&newThread, nullptr, &logThread, nullptr);
+
     if(argc == 1){
         printf("No port number entered.\n");
         return -1;
