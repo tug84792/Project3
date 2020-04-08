@@ -116,7 +116,21 @@ void * logThread(void * arg){
                 elementBound = 1;
             }
         }
-
+        index = 0;
+        elementBound = 100;
+        pthread_mutex_lock(&lockForLogFile);
+        ofstream file(logText, ios::app);
+        if(file.is_open()){
+            for (int i = 0; i < loggerVector.size(); i++){
+                file << loggerVector[i] << "\n";
+            }
+            loggerVector.clear();
+            file.close();
+        }
+        pthread_mutex_unlock(&lockForLogFile);
+    }
+    pthread_exit(nullptr);
+}
 
 
 //In the main function, a lot of the code is the same as given on Canvas. I only added a few lines
