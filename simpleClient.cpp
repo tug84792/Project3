@@ -1,3 +1,5 @@
+//g++ -std=c++11 -pthread -o ec simpleClient.cpp -I.
+
 #include "simpleServer.h"
 #include<map>
 #include<fstream>
@@ -5,141 +7,92 @@
 #include<vector>
 #include<string>
 #include<fstream>
+#include <cstdio>
+#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <cstring>
+#include <pthread.h>
 
+#define PORTNUMBER 5091
+#define NUMBEROFTHREADS 10
+using namespace std;
 //For some reason, and I have noe idea why, but i had to declare everything here. It would not take
 //a header file as being common.
+int labSocket = 0;
+struct sockaddr_in addressOfServer;
+pthread_mutex_t mutexLock = PTHREAD_MUTEX_INITIALIZER;
 
-using namespace std;
-map<string, int> inputWord;
-vector<int> cSockVector;
-pthread_mutex_t lockForSocket;
-//Here I create a client thread, which is fairly similar to the workerThread over in simpleServer.cpp
-void* clientThread(void * argument){
-
+//Here I create a function that the client thread will use to communicate,
+//which is fairly similar to the workerThread over in simpleServer.cpp
+void* writeToServer(void* argument) {
     //NOTE: For this file in general, much of the logic is used to help set things up for
     //the client. This logic was discussed in the textbook, as well as the video uploaded by Dr. Kwatny.
-    socklen_t sizeOfServerAddress;
-    int connectionValue,sentValue, receivedValue, socket_desc;
-    struct sockaddr_in addressOfServer;
 
-    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_desc == - 1){
-        printf("Could not create socket");
+    //This is the word that I'll be sending to the server.
+    char *term = "coach";
+    //Begin locking
+    pthread_mutex_lock(&mutexLock);
+
+    //Error checking. Once again, this was provided by textbook.
+    if ((labSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\n Socket creation error \n");
+        pthread_mutex_unlock(&mutexLock);
+        return nullptr;
     }
-    //Here I append the current socket to the socket descriptor queue,
-    //with protection of a lock
-    pthread_mutex_lock(&lockForSocket);
-    cSockVector.push_back(socket_desc);
-    pthread_mutex_unlock(&lockForSocket);
 
     //Here I initialize server address settings Configure settings of the server address.
     //Various data structures to help initialize
     addressOfServer.sin_family = AF_INET;
-    addressOfServer.sin_addr.s_addr = inet_addr("127.0.0.1");
-    addressOfServer.sin_port = htons(5000);
-    memset(addressOfServer.sin_zero, '\0', sizeof addressOfServer.sin_zero);
+    addressOfServer.sin_port = htons(PORTNUMBER);
 
-    //Here, I will link the socket to the server via the address variable addressOfServer
-    sizeOfServerAddress = sizeof addressOfServer;
-    //Again use built-in funcitons/provided code
-    connectionValue = connect(socket_desc, (struct sockaddr *) &addressOfServer, sizeOfServerAddress);
-    //Error checking
-    if (connectionValue < 0){
-        cout << "CONNECTION ERROR" << endl;
-        return reinterpret_cast<void *>(1);
-    }
-    puts("CONNECTED");
-
-    string message;
-    map<string, int>::iterator looper;
-    char boundedBuffer[BUF_LEN];
-
-    //This for loop has same logic as in the worker thread. Keeps going until it has reached the end.
-    for(looper = inputWord.begin(); looper != inputWord.end(); looper++){
-
-        message = (*looper).first;
-        //keep adding new line
-        message += "\n";
-
-        //Again use built-in funcitons/provided code
-        sentValue = send(socket_desc, message.c_str(), message.length(), 0);
-        //Error checking
-        if (sentValue < 0){
-            puts("SEND FAILED");
-            return reinterpret_cast<void *>(1);
-        }
-        puts("DATA SENT");
-
-        receivedValue = recv(socket_desc, boundedBuffer, BUF_LEN, 0);
-        if (receivedValue < 0){
-            puts("RECV FAILED");
-            return reinterpret_cast<void *>(1);
-        }
-        puts("REPLY RECEIVED\n");
-        puts(boundedBuffer);
+    // Here I am basically converting text to binary, and error checking. Provided code used again.
+    if (inet_pton(AF_INET, "127.0.0.1", &addressOfServer.sin_addr) <= 0) {
+        printf("\nThe address is invalid. \n");
+        //unlock the lock
+        pthread_mutex_unlock(&mutexLock);
+        return nullptr;
     }
 
-    //Here I will iterate through the whole queue of sockets, protecting this data structure using a mutex
-    pthread_mutex_lock(&lockForSocket);
-    //Iterator named positionC, C for this being the client file
-    auto positionC = cSockVector.end();
-    //looperH for this file's looper specifically
-    for(auto looperH = cSockVector.begin(); looperH != cSockVector.end(); looperH++){
-        //If at the end
-        if(socket_desc == *looperH){
-            positionC = looperH;
-            break;
-        }
+    //Again use built-in functions/provided code
+    if (connect(labSocket, (struct sockaddr *) &addressOfServer, sizeof(addressOfServer)) < 0) {
+        //unlock the lock
+        pthread_mutex_unlock(&mutexLock);
+        return nullptr;
     }
-    //Get rid of last element, and release the lock.
-    cSockVector.erase(positionC);
-    pthread_mutex_unlock(&lockForSocket);
+    //Here I send the word "coach". Provided code used again.
+    send(labSocket, term, strlen(term), 0);
+    char buffer[1024] = {0};
 
-    //Close out the client and end the thread
-    close(socket_desc);
-    pthread_exit(nullptr);
+    //Originally I had this line, but then my IDE said it was never used. But when I ran it without this line,
+    //it didn't work. Provided code used again.
+    int returnedValue = read(labSocket, buffer, 1024);
+    //print the word which is the buffer
+    printf("%s\n", buffer);
+    //unlock the lock
+    pthread_mutex_unlock(&mutexLock);
 }
-string dictionary = "words.txt";
-
-//This function is quite simple. It loads the dictionary text file into the program.
-//It is then placed into a data structure for further comparison. It will be used for both simpleServer
-//and simpleClient.
-void initDictionary(void){
-    //Bring in file pointer and read it in
-    fstream dictFP;
-    string localString;
-    dictFP.open(dictionary, ios::in);
-
-    //Grab each word line by line and stored in localString
-    if(dictFP.is_open()){
-        while(getline(dictFP, localString)){
-            inputWord[localString] = 1;
-        }
-    }
-    //Close up the dictionary file
-    dictFP.close();
-}
-
-//main function that initializes the 10 threads for testing
-int main() {
-
-    //Initialize the dictionary and client threads
-    initDictionary();
-    pthread_t client;
-    //Begin locking
-    pthread_mutex_init(&lockForSocket, nullptr);
+int main(int argc, char const *argv[]) {
+    //thread pool
+    pthread_t groupOfThreads[NUMBEROFTHREADS];
+    //number of threads to loop through
+    int threadClients[NUMBEROFTHREADS];
+    printf("The threads are now being initiated.\n");
 
     //for loop that actually created the 10 threads
-    for(int i = 0; i < 10; i++){
-        pthread_create(&client, nullptr, &clientThread, nullptr);
+    for (int i = 0; i < NUMBEROFTHREADS; i++) {
+        //Here I index the i value and make it each thread's indivisual value
+        threadClients[i] = i;
+        //Create each thread, write to server for that specific thread.
+        pthread_create(&groupOfThreads[i], nullptr, &writeToServer, &threadClients[i]);
     }
-
-    usleep(10);
-    //Here, I use a while loop to wait for the client thread to complete its requests
-    //I also error check to make sure that there are actually clients
-    while (!cSockVector.empty()) {
-        usleep(100);
+    //for loop that will wait for the 10 threads
+    for (auto & i : groupOfThreads) {
+        pthread_join(i, nullptr);
     }
+    printf("The threads have been initiated. Requests sent. \n");
     return 0;
 }
+
+
+
